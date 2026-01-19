@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:expense_tracker_app/models/expense.dart';
 
 final formatter = DateFormat.yMd();
 
@@ -16,6 +17,7 @@ class _NewExpenseState extends State<NewExpense> {
   final _titleController = TextEditingController();
   final _amountController = TextEditingController();
   DateTime? _selectedDate;
+  Category _selectedCategory = Category.leisure;
 
   void _presentDatePicker() async {
     final now = DateTime.now();
@@ -29,6 +31,16 @@ class _NewExpenseState extends State<NewExpense> {
     setState(() {
       _selectedDate = pickedDate;
     });
+  }
+
+  void _submitExpenseData()
+  {
+
+    final enterAmount = double.tryParse(_amountController.text);
+
+    if (_titleController.text.trim().isEmpty) {
+
+    }
   }
 
   @override
@@ -69,7 +81,11 @@ class _NewExpenseState extends State<NewExpense> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text(_selectedDate == null ? 'Brak wybranej daty' : formatter.format(_selectedDate!)),
+                    Text(
+                      _selectedDate == null
+                          ? 'Brak wybranej daty'
+                          : formatter.format(_selectedDate!),
+                    ),
                     IconButton(
                       onPressed: _presentDatePicker,
                       icon: const Icon(Icons.calendar_month),
@@ -79,9 +95,28 @@ class _NewExpenseState extends State<NewExpense> {
               ),
             ],
           ),
-
+          const SizedBox(height: 16,),
           Row(
             children: [
+              DropdownButton(
+                value:_selectedCategory,
+                items: Category.values.map(
+                  (category) =>
+                      DropdownMenuItem(
+                        value:category,
+                        child: Text(category.name.toUpperCase())),
+                ).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    if(value == null)
+                    {
+                      return;
+                    }
+                    _selectedCategory = value;
+                  });
+                },
+              ),
+              const Spacer(),
               TextButton(
                 onPressed: () {
                   Navigator.pop(context);
@@ -89,10 +124,7 @@ class _NewExpenseState extends State<NewExpense> {
                 child: Text('Anuluj'),
               ),
               ElevatedButton(
-                onPressed: () {
-                  print(_titleController.text);
-                  print(_amountController.text);
-                },
+                onPressed: _submitExpenseData,
                 child: const Text('Zapisz'),
               ),
             ],
