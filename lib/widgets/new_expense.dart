@@ -5,7 +5,9 @@ import 'package:expense_tracker_app/models/expense.dart';
 final formatter = DateFormat.yMd();
 
 class NewExpense extends StatefulWidget {
-  const NewExpense({super.key});
+  const NewExpense({super.key, required this.onAddExpense});
+
+  final void Function(Expense expense) onAddExpense;
 
   @override
   State<NewExpense> createState() {
@@ -33,14 +35,42 @@ class _NewExpenseState extends State<NewExpense> {
     });
   }
 
-  void _submitExpenseData()
-  {
-
-    final enterAmount = double.tryParse(_amountController.text);
-
-    if (_titleController.text.trim().isEmpty) {
-
+  void _submitExpenseData() {
+    final enteredAmount = double.tryParse(_amountController.text);
+    final amountIsInvalid = enteredAmount == null || enteredAmount <= 0;
+    if (_titleController.text.trim().isEmpty ||
+        amountIsInvalid ||
+        _selectedDate == null) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text('Nieprawidłowe dane'),
+          content: const Text(
+            'Upewnij się że wpisałeś prawidłowy tytuł, kwotę i datę wydatku.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+              },
+              child: const Text('Zamknij'),
+            ),
+          ],
+        ),
+      );
+      return;
     }
+
+    widget.onAddExpense(
+      Expense(
+        title: _titleController.text,
+        amount: enteredAmount,
+        date: _selectedDate!,
+        category: _selectedCategory,
+      ),
+    );
+
+    Navigator.pop(context);
   }
 
   @override
@@ -53,7 +83,7 @@ class _NewExpenseState extends State<NewExpense> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.fromLTRB(16, 40, 16, 16),
       child: Column(
         children: [
           Text('Dodaj nowy wydatek'),
@@ -95,21 +125,22 @@ class _NewExpenseState extends State<NewExpense> {
               ),
             ],
           ),
-          const SizedBox(height: 16,),
+          const SizedBox(height: 16),
           Row(
             children: [
               DropdownButton(
-                value:_selectedCategory,
-                items: Category.values.map(
-                  (category) =>
-                      DropdownMenuItem(
-                        value:category,
-                        child: Text(category.name.toUpperCase())),
-                ).toList(),
+                value: _selectedCategory,
+                items: Category.values
+                    .map(
+                      (category) => DropdownMenuItem(
+                        value: category,
+                        child: Text(category.name.toUpperCase()),
+                      ),
+                    )
+                    .toList(),
                 onChanged: (value) {
                   setState(() {
-                    if(value == null)
-                    {
+                    if (value == null) {
                       return;
                     }
                     _selectedCategory = value;
